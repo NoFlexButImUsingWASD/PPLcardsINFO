@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>People Cards</title>
+  <style>
+    body {
+      background-color: #f4f4f4;
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+
+    .form-container {
+      background-color: #fff;
+      border-radius: 5px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-container h2 {
+      margin-top: 0;
+    }
+
+    .form-container input[type="text"],
+    .form-container textarea {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+      margin-bottom: 10px;
+      resize: none;
+    }
+
+    .form-container input[type="file"] {
+      margin-top: 10px;
+    }
+
+    .form-container button[type="submit"] {
+      background-color: #4caf50;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 3px;
+      cursor: pointer;
+    }
+
+    .form-container button[type="submit"]:hover {
+      background-color: #45a049;
+    }
+
+    .card-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      grid-gap: 20px;
+    }
+
+    .card {
+      background-color: #fff;
+      border-radius: 5px;
+      padding: 20px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .card h2 {
+      margin-top: 0;
+      color: #333;
+    }
+
+    .card p {
+      margin-bottom: 10px;
+      color: #555;
+    }
+
+    .card img {
+      max-width: 100%;
+      height: auto;
+      border-radius: 5px;
+    }
+
+    .card .creation-date {
+      font-size: 12px;
+      color: #777;
+    }
+
+    .search-container {
+      margin-bottom: 20px;
+    }
+
+    .search-container input[type="text"] {
+      width: 100%;
+      padding: 10px;
+      border: 1px solid #ccc;
+      border-radius: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>People Cards</h1>
+  <div class="form-container">
+    <h2>Create a Card</h2>
+    <form id="cardForm">
+      <input type="text" id="nameInput" placeholder="Your Name" required>
+      <input type="text" id="surnameInput" placeholder="Your Surname">
+      <textarea id="infoInput" placeholder="Additional information about you"></textarea>
+      <textarea id="wantInput" placeholder="What you want or desire"></textarea>
+      <input type="file" id="imageInput" accept="image/*">
+      <button type="submit">Add Card</button>
+    </form>
+  </div>
+  <div class="search-container">
+    <input type="text" id="searchInput" onkeyup="searchCards()" placeholder="Search for a person...">
+  </div>
+  <div class="card-container" id="cardsContainer"></div>
+
+  <script>
+    function getCurrentDate() {
+      const date = new Date();
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      return date.toLocaleDateString('en-US', options);
+    }
+
+    function generateCardElement(person) {
+      const card = document.createElement('div');
+      card.classList.add('card');
+
+      let cardContent = `<h2>${person.name}`;
+      if (person.surname) {
+        cardContent += ` ${person.surname}`;
+      }
+      cardContent += `</h2>`;
+      cardContent += `<p>${person.info}</p>`;
+      cardContent += `<p>${person.want}</p>`;
+      if (person.image) {
+        cardContent += `<img src="${person.image}" alt="Person's Image">`;
+      }
+      cardContent += `<p class="creation-date">Created on: ${person.date}</p>`;
+
+      card.innerHTML = cardContent;
+      return card;
+    }
+
+    function renderCards() {
+      const cardsContainer = document.getElementById('cardsContainer');
+      cardsContainer.innerHTML = '';
+
+      const storedData = localStorage.getItem('people');
+      const people = storedData ? JSON.parse(storedData) : [];
+
+      for (let person of people) {
+        const card = generateCardElement(person);
+        cardsContainer.appendChild(card);
+      }
+    }
+
+    function searchCards() {
+      const input = document.getElementById('searchInput');
+      const filter = input.value.toUpperCase();
+      const cards = document.getElementsByClassName('card');
+
+      for (let card of cards) {
+        const name = card.getElementsByTagName('h2')[0];
+        if (name.innerHTML.toUpperCase().indexOf(filter) > -1) {
+          card.style.display = '';
+        } else {
+          card.style.display = 'none';
+        }
+      }
+    }
+
+    function handleFormSubmit(event) {
+      event.preventDefault();
+
+      const name = document.getElementById('nameInput').value;
+      const surname = document.getElementById('surnameInput').value;
+      const info = document.getElementById('infoInput').value;
+      const want = document.getElementById('wantInput').value;
+      const imageInput = document.getElementById('imageInput');
+      const image = imageInput.files.length > 0 ? URL.createObjectURL(imageInput.files[0]) : '';
+
+      const person = {
+        name: name,
+        surname: surname,
+        info: info,
+        want: want,
+        image: image,
+        date: getCurrentDate()
+      };
+
+      const storedData = localStorage.getItem('people');
+      const people = storedData ? JSON.parse(storedData) : [];
+      people.push(person);
+
+      localStorage.setItem('people', JSON.stringify(people));
+
+      renderCards();
+      document.getElementById('cardForm').reset();
+    }
+
+    document.getElementById('cardForm').addEventListener('submit', handleFormSubmit);
+    renderCards();
+  </script>
+</body>
+</html>
